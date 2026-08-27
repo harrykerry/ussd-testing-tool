@@ -54,11 +54,14 @@ export function validateUssdResponse(
   }
 
   for (const character of text) {
-    if (!GSM_03_38_CHARACTERS.includes(character)) {
-      return `USSD response contains an unsupported character: "${character}".`;
+    if (
+      character !== "\n" &&
+      character !== "\r" &&
+      !GSM_03_38_CHARACTERS.includes(character)
+    ) {
+      return `USSD response contains an unsupported character: ${JSON.stringify(character)}.`;
     }
   }
-
   return null;
 }
 
