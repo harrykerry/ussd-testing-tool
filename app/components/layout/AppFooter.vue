@@ -10,7 +10,7 @@ const year = new Date().getFullYear();
       class="mx-auto flex max-w-7xl items-center justify-center px-4 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pt-2.5 sm:px-6 sm:py-4 sm:pb-4"
     >
       <p class="text-center text-xs text-brand-ink-muted sm:text-sm">
-        Built by
+        © {{ year }} · Built by
         <a
           href="https://www.haroldkerry.co.ke"
           target="_blank"
