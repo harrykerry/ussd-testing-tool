@@ -53,8 +53,12 @@ import { guideSections } from "~/constants/sections";
           class="min-w-0 lg:h-[calc(100vh-220px)] lg:overflow-y-auto lg:scroll-smooth lg:pr-3"
         >
           <GuideCallout title="Using a local callback" icon="i-lucide-globe-2">
-            Tools such as ngrok can expose your local backend through a public
-            HTTPS URL. Use that URL as the callback in the emulator.
+            If your backend is running locally, you can use its local URL as the
+            callback when CORS is configured to allow requests from the
+            emulator. If you run into CORS restrictions, configure CORS on your
+            backend to allow the emulator's origin. Alternatively, tools such as
+            ngrok can expose your local backend through a public HTTPS URL,
+            which you can use as the callback.
           </GuideCallout>
 
           <GuideSection id="how-it-works" title="How USSD works">

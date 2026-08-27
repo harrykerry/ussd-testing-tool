@@ -67,7 +67,9 @@ const updateConfig = <K extends keyof UssdConfig>(
       />
 
       <p class="text-xs leading-5 text-brand-ink-muted">
-        Configure the endpoint that receives your USSD requests.
+        Configure the endpoint that receives your USSD requests. Supports both
+        local and live endpoints; if using a local endpoint, enable CORS if
+        needed.
       </p>
     </div>
 
@@ -84,7 +86,7 @@ const updateConfig = <K extends keyof UssdConfig>(
           id="callback-url"
           :value="config.callbackUrl"
           type="url"
-          placeholder="https://example.com/api/ussd"
+          placeholder="http://localhost/api/ussd"
           :disabled="activeSession"
           class="w-full rounded-lg border bg-brand-surface px-3 py-2 text-sm text-brand-ink outline-none transition placeholder:text-brand-ink-subtle focus:ring-1 disabled:cursor-not-allowed disabled:bg-brand-surface-muted disabled:opacity-60"
           :class="
