@@ -54,12 +54,16 @@ export function validateUssdResponse(
   }
 
   for (const character of text) {
+    const codePoint = character.codePointAt(0);
+
     if (
       character !== "\n" &&
       character !== "\r" &&
       !GSM_03_38_CHARACTERS.includes(character)
     ) {
-      return `USSD response contains an unsupported character: ${JSON.stringify(character)}.`;
+      return `USSD response contains an unsupported character: ${JSON.stringify(
+        character,
+      )} (U+${codePoint?.toString(16).toUpperCase().padStart(4, "0")}).`;
     }
   }
   return null;
