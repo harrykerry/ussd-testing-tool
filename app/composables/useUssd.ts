@@ -16,6 +16,7 @@ import {
 
 import { africasTalkingGateway } from "~/gateways/africas-talking";
 import { advantaGateway } from "~/gateways/advanta";
+import { isLocalCallbackUrl } from "~/utils/callback";
 
 const DEFAULT_CONFIG: UssdConfig = {
   gateway: "",
@@ -25,6 +26,7 @@ const DEFAULT_CONFIG: UssdConfig = {
   method: "POST",
   headers: {},
 };
+const PROXY_URL = "https://proxy.volcha.co.ke/proxy";
 
 export const useUssd = () => {
   const { save, load, clear } = useUssdStorage();
@@ -144,41 +146,74 @@ export const useUssd = () => {
         log.request.method = result.requestMethod;
         log.request.headers = result.requestHeaders;
         log.request.body = result.requestBody;
-      } else if (config.value.method === "GET") {
-        const url = new URL(config.value.callbackUrl);
-
-        url.searchParams.set("sessionId", request.sessionId);
-        url.searchParams.set("serviceCode", request.serviceCode);
-        url.searchParams.set("phoneNumber", request.phoneNumber);
-        url.searchParams.set("text", request.text);
-
-        const headers = config.value.headers;
-
-        response = await fetch(url.toString(), {
-          method: "GET",
-          headers,
-        });
-
-        log.request.url = url.toString();
-        log.request.method = "GET";
-        log.request.headers = headers;
-        log.request.body = undefined;
       } else {
-        const headers = {
-          "Content-Type": "application/json",
-          ...config.value.headers,
-        };
+        const useProxy = !isLocalCallbackUrl(config.value.callbackUrl);
 
-        response = await fetch(config.value.callbackUrl, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(request),
-        });
+        if (config.value.method === "GET") {
+          const url = new URL(config.value.callbackUrl);
 
-        log.request.url = config.value.callbackUrl;
-        log.request.method = "POST";
-        log.request.headers = headers;
-        log.request.body = request;
+          url.searchParams.set("sessionId", request.sessionId);
+          url.searchParams.set("serviceCode", request.serviceCode);
+          url.searchParams.set("phoneNumber", request.phoneNumber);
+          url.searchParams.set("text", request.text);
+
+          const headers = config.value.headers;
+
+          if (useProxy) {
+            response = await fetch(PROXY_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                url: url.toString(),
+                method: "GET",
+                headers,
+              }),
+            });
+          } else {
+            response = await fetch(url.toString(), {
+              method: "GET",
+              headers,
+            });
+          }
+
+          log.request.url = url.toString();
+          log.request.method = "GET";
+          log.request.headers = headers;
+          log.request.body = undefined;
+        } else {
+          const headers = {
+            "Content-Type": "application/json",
+            ...config.value.headers,
+          };
+
+          if (useProxy) {
+            response = await fetch(PROXY_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                url: config.value.callbackUrl,
+                method: "POST",
+                headers,
+                body: request,
+              }),
+            });
+          } else {
+            response = await fetch(config.value.callbackUrl, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(request),
+            });
+          }
+
+          log.request.url = config.value.callbackUrl;
+          log.request.method = "POST";
+          log.request.headers = headers;
+          log.request.body = request;
+        }
       }
 
       if (!response.ok) {

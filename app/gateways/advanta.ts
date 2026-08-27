@@ -1,5 +1,8 @@
 import type { UssdConfig, UssdRequest } from "~/interfaces/ussd.interface";
 
+import { ENVIRONMENTS } from "~/constants/environments";
+import { isLocalCallbackUrl } from "~/utils/callback";
+
 export const advantaGateway = async (
   config: UssdConfig,
   request: UssdRequest,
@@ -11,6 +14,8 @@ export const advantaGateway = async (
     INPUT: request.text,
   };
 
+  const local = isLocalCallbackUrl(config.callbackUrl);
+
   if (config.method === "GET") {
     const url = new URL(config.callbackUrl);
 
@@ -18,10 +23,22 @@ export const advantaGateway = async (
       url.searchParams.set(key, value);
     });
 
-    const response = await fetch(url.toString(), {
-      method: "GET",
-      headers: config.headers,
-    });
+    const response = local
+      ? await fetch(url.toString(), {
+          method: "GET",
+          headers: config.headers,
+        })
+      : await fetch(ENVIRONMENTS.proxyUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: url.toString(),
+            method: "GET",
+            headers: config.headers,
+          }),
+        });
 
     return {
       response,
@@ -37,11 +54,24 @@ export const advantaGateway = async (
     ...config.headers,
   };
 
-  const response = await fetch(config.callbackUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(params),
-  });
+  const response = local
+    ? await fetch(config.callbackUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(params),
+      })
+    : await fetch(ENVIRONMENTS.proxyUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: config.callbackUrl,
+          method: "POST",
+          headers,
+          body: params,
+        }),
+      });
 
   return {
     response,

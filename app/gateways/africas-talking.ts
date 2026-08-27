@@ -1,7 +1,7 @@
-import type {
-  UssdConfig,
-  UssdRequest,
-} from "~/interfaces/ussd.interface";
+import type { UssdConfig, UssdRequest } from "~/interfaces/ussd.interface";
+
+import { ENVIRONMENTS } from "~/constants/environments";
+import { isLocalCallbackUrl } from "~/utils/callback";
 
 export const africasTalkingGateway = async (
   config: UssdConfig,
@@ -20,12 +20,26 @@ export const africasTalkingGateway = async (
     ...config.headers,
   };
 
-  const response = await fetch(config.callbackUrl, {
-    method: "POST",
-    headers,
-    body: body.toString(),
-  });
+  const local = isLocalCallbackUrl(config.callbackUrl);
 
+  const response = local
+    ? await fetch(config.callbackUrl, {
+        method: "POST",
+        headers,
+        body: body.toString(),
+      })
+    : await fetch(ENVIRONMENTS.proxyUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: config.callbackUrl,
+          method: "POST",
+          headers,
+          body: body.toString(),
+        }),
+      });
 
   return {
     response,
