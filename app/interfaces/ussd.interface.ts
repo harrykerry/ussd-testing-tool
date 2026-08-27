@@ -5,6 +5,8 @@ import type {
 } from "~/types/ussd.type";
 
 export interface UssdConfig {
+  gateway: string;
+
   callbackUrl: string;
 
   serviceCode: string;
@@ -14,6 +16,8 @@ export interface UssdConfig {
   method: UssdHttpMethod;
 
   headers: Record<string, string>;
+
+  networkCode?: string;
 }
 
 export interface UssdSession {
@@ -64,7 +68,7 @@ export interface UssdLog {
 
     headers: Record<string, string>;
 
-    body?: UssdRequest;
+    body?: unknown;
   };
 
   response?: {

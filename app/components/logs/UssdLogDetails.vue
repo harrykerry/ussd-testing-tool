@@ -17,6 +17,10 @@ const requestBody = computed(() => {
     return "";
   }
 
+  if (typeof props.log.request.body === "string") {
+    return props.log.request.body;
+  }
+
   return JSON.stringify(props.log.request.body, null, 2);
 });
 
@@ -58,7 +62,7 @@ const statusLabel = computed(() => {
     v-if="log"
     class="overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-sm"
   >
-    <!-- Header -->
+    
     <header
       class="flex items-start justify-between gap-4 border-b border-brand-border px-5 py-4"
     >
@@ -176,7 +180,15 @@ const statusLabel = computed(() => {
               <CopyButton v-if="requestBody" :value="requestBody" />
             </div>
 
-            <CodeBlock v-if="requestBody" filename="request.json" type="JSON">
+            <CodeBlock
+              v-if="requestBody"
+              :filename="
+                typeof log.request.body === 'string'
+                  ? 'request.txt'
+                  : 'request.json'
+              "
+              :type="typeof log.request.body === 'string' ? 'TEXT' : 'JSON'"
+            >
               {{ requestBody }}
             </CodeBlock>
 

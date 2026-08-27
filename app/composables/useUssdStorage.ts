@@ -1,19 +1,29 @@
-import type { UssdLog, UssdSession } from "~/interfaces/ussd.interface";
+import type {
+  UssdConfig,
+  UssdLog,
+  UssdSession,
+} from "~/interfaces/ussd.interface";
 
 const STORAGE_KEY = "ussd-emulator-session";
 
 interface UssdStorage {
+  config: UssdConfig;
   session: UssdSession | null;
   logs: UssdLog[];
 }
 
 export const useUssdStorage = () => {
-  const save = (session: UssdSession | null, logs: UssdLog[]) => {
+  const save = (
+    config: UssdConfig,
+    session: UssdSession | null,
+    logs: UssdLog[],
+  ) => {
     if (!import.meta.client) {
       return;
     }
 
     const data: UssdStorage = {
+      config,
       session,
       logs,
     };

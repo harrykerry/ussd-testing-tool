@@ -13,6 +13,7 @@ import UssdSessionEnded from "~/components/ussd/UssdSessionEnded.vue";
 
 const {
   config,
+  configLoading,
   session,
   logs,
   loading,
@@ -149,7 +150,9 @@ const reset = () => {
       <div v-if="activeTab === 'config'" class="mx-auto max-w-2xl">
         <CallbackConfig
           v-model="config"
+          :config-loading="configLoading"
           @start="start"
+          @reset="resetSession"
           :active-session="session?.status === 'active'"
         />
       </div>

@@ -12,16 +12,27 @@ import {
   parseUssdResponse,
 } from "~/utils/ussd";
 
+import { africasTalkingGateway } from "~/gateways/africas-talking";
+import { advantaGateway } from "~/gateways/advanta";
+
+const DEFAULT_CONFIG: UssdConfig = {
+  gateway: "",
+  callbackUrl: "",
+  serviceCode: "*123#",
+  phoneNumber: "254700000000",
+  method: "POST",
+  headers: {},
+};
+
 export const useUssd = () => {
   const { save, load, clear } = useUssdStorage();
 
   const config = useState<UssdConfig>("ussd-config", () => ({
-    callbackUrl: "",
-    serviceCode: "*123#",
-    phoneNumber: "254700000000",
-    method: "POST",
+    ...DEFAULT_CONFIG,
     headers: {},
   }));
+
+  const configLoading = useState<boolean>("ussd-config-loading", () => true);
 
   const session = useState<UssdSession | null>("ussd-session", () => null);
 
@@ -32,7 +43,7 @@ export const useUssd = () => {
   const error = useState<string | null>("ussd-error", () => null);
 
   const persist = () => {
-    save(session.value, logs.value);
+    save(config.value, session.value, logs.value);
   };
 
   const startSession = async () => {
@@ -100,8 +111,8 @@ export const useUssd = () => {
       request: {
         url: config.value.callbackUrl,
         method: config.value.method,
-        headers: config.value.headers,
-        body: request,
+        headers: {},
+        body: undefined,
       },
     };
 
@@ -113,34 +124,60 @@ export const useUssd = () => {
     try {
       let response: Response;
 
-      if (config.value.method === "GET") {
+      if (config.value.gateway === "africas-talking") {
+        const result = await africasTalkingGateway(config.value, request);
+
+        response = result.response;
+
+        log.request.url = result.requestUrl;
+        log.request.method = result.requestMethod;
+        log.request.headers = result.requestHeaders;
+        log.request.body = result.requestBody;
+      } else if (config.value.gateway === "advanta") {
+        const result = await advantaGateway(config.value, request);
+
+        response = result.response;
+
+        log.request.url = result.requestUrl;
+        log.request.method = result.requestMethod;
+        log.request.headers = result.requestHeaders;
+        log.request.body = result.requestBody;
+      } else if (config.value.method === "GET") {
         const url = new URL(config.value.callbackUrl);
 
         url.searchParams.set("sessionId", request.sessionId);
-
         url.searchParams.set("serviceCode", request.serviceCode);
-
         url.searchParams.set("phoneNumber", request.phoneNumber);
-
         url.searchParams.set("text", request.text);
+
+        const headers = config.value.headers;
 
         response = await fetch(url.toString(), {
           method: "GET",
-          headers: config.value.headers,
+          headers,
         });
 
         log.request.url = url.toString();
+        log.request.method = "GET";
+        log.request.headers = headers;
+        log.request.body = undefined;
       } else {
+        const headers = {
+          "Content-Type": "application/json",
+          ...config.value.headers,
+        };
+
         response = await fetch(config.value.callbackUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...config.value.headers,
-          },
+          headers,
           body: JSON.stringify(request),
         });
-      }
 
+        log.request.url = config.value.callbackUrl;
+        log.request.method = "POST";
+        log.request.headers = headers;
+        log.request.body = request;
+      }
       const responseBody = await response.text();
 
       log.duration = Math.round(performance.now() - startedAt);
@@ -188,23 +225,47 @@ export const useUssd = () => {
     }
   };
 
-  const restoreSession = () => {
+  const restoreSession = async () => {
+    const startTime = Date.now();
+
     const stored = load();
 
-    if (!stored) {
-      return;
+    if (stored) {
+      config.value = {
+        ...DEFAULT_CONFIG,
+        ...stored.config,
+      };
+
+      session.value = stored.session;
+      logs.value = stored.logs;
     }
 
-    session.value = stored.session;
-    logs.value = stored.logs;
+    const elapsed = Date.now() - startTime;
+    const minimumLoadingTime = 400;
+
+    if (elapsed < minimumLoadingTime) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, minimumLoadingTime - elapsed),
+      );
+    }
+
+    configLoading.value = false;
   };
 
   const resetSession = () => {
     clear();
 
+    config.value = {
+      ...DEFAULT_CONFIG,
+      headers: {},
+    };
+
     session.value = null;
+
     logs.value = [];
+
     error.value = null;
+
     loading.value = false;
   };
 
@@ -214,6 +275,7 @@ export const useUssd = () => {
 
   return {
     config,
+    configLoading,
     session,
     logs,
     loading,
