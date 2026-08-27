@@ -10,6 +10,8 @@ import {
   buildUssdText,
   generateSessionId,
   parseUssdResponse,
+  validateUssdResponse,
+  validateUssdResponseHeaders,
 } from "~/utils/ussd";
 
 import { africasTalkingGateway } from "~/gateways/africas-talking";
@@ -178,6 +180,18 @@ export const useUssd = () => {
         log.request.headers = headers;
         log.request.body = request;
       }
+
+      if (!response.ok) {
+        throw new Error(`Callback returned HTTP ${response.status}`);
+      }
+
+      const responseHeaderValidationError = validateUssdResponseHeaders(
+        response.headers,
+      );
+
+      if (responseHeaderValidationError) {
+        throw new Error(responseHeaderValidationError);
+      }
       const responseBody = await response.text();
 
       log.duration = Math.round(performance.now() - startedAt);
@@ -190,11 +204,13 @@ export const useUssd = () => {
 
       logs.value.push(log);
 
-      if (!response.ok) {
-        throw new Error(`Callback returned HTTP ${response.status}`);
-      }
-
       const ussdResponse: UssdResponse = parseUssdResponse(responseBody);
+
+      const responseValidationError = validateUssdResponse(ussdResponse.text);
+
+      if (responseValidationError) {
+        throw new Error(responseValidationError);
+      }
 
       session.value.response = ussdResponse.text;
 
