@@ -60,9 +60,8 @@ const statusLabel = computed(() => {
 <template>
   <section
     v-if="log"
-    class="overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-sm"
+    class="overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-sm mb-6"
   >
-    
     <header
       class="flex items-start justify-between gap-4 border-b border-brand-border px-5 py-4"
     >
@@ -129,6 +128,23 @@ const statusLabel = computed(() => {
     </header>
 
     <div class="p-5">
+      <div
+        v-if="log.error"
+        class="mx-auto mb-6 mt-2 w-full max-w-lg rounded-xl p-5 text-center"
+        style="background-color: var(--color-brand-danger)"
+      >
+        <div class="flex flex-col items-center">
+          <Icon name="i-lucide-circle-alert" class="size-6 text-white" />
+
+          <p class="mt-2 text-sm text-white">Request failed</p>
+
+          <p
+            class="mt-1 max-h-32 overflow-y-auto text-xs leading-5 text-white break-words"
+          >
+            {{ log.error }}
+          </p>
+        </div>
+      </div>
       <div class="grid gap-5 lg:grid-cols-2">
         <div class="min-w-0 space-y-4">
           <h3 class="text-xs font-semibold text-brand-ink">Request</h3>
@@ -194,7 +210,7 @@ const statusLabel = computed(() => {
 
             <div
               v-else
-              class="rounded-xl border border-dashed border-brand-border bg-brand-surface-muted px-4 py-6 text-center"
+              class="rounded-xl border border-dashed border-brand-border bg-brand-surface-muted px-4 py-8 text-center"
             >
               <Icon
                 name="i-lucide-file-json"
@@ -207,7 +223,7 @@ const statusLabel = computed(() => {
         </div>
 
         <div class="min-w-0 mt-6">
-          <div class="mb-2.5 flex items-center gap-2">
+          <div class="mb-2.5 flex items-center gap-2 mb-4">
             <h3 class="text-xs font-semibold text-brand-ink">Response</h3>
 
             <span
@@ -263,11 +279,11 @@ const statusLabel = computed(() => {
 
           <div
             v-else
-            class="flex min-h-[300px] items-center justify-center rounded-xl border border-dashed border-brand-border bg-brand-surface-muted"
+            class="flex min-h-[300px] py-8 items-center justify-center rounded-xl border border-dashed border-brand-border bg-brand-surface-muted"
           >
             <div class="text-center">
               <div
-                class="mx-auto flex size-10 items-center justify-center rounded-xl bg-brand-accent-soft"
+                class="mx-auto flex size-10 items-center justify-center rounded-xl"
               >
                 <Icon
                   name="i-lucide-circle-alert"
@@ -283,32 +299,6 @@ const statusLabel = computed(() => {
                 The callback did not return a response.
               </p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        v-if="log.error"
-        class="mt-5 rounded-xl border border-brand-danger-soft bg-brand-danger-soft p-4"
-      >
-        <div class="flex items-start gap-3">
-          <div
-            class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-surface"
-          >
-            <Icon
-              name="i-lucide-circle-alert"
-              class="size-4 text-brand-danger"
-            />
-          </div>
-
-          <div class="min-w-0">
-            <p class="text-xs font-semibold text-brand-danger">
-              Request failed
-            </p>
-
-            <p class="mt-1 text-xs leading-5 text-brand-danger/80">
-              {{ log.error }}
-            </p>
           </div>
         </div>
       </div>

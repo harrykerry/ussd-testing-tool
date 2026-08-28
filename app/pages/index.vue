@@ -174,6 +174,12 @@ const reset = () => {
               @start="start"
               @reset="reset"
             />
+
+            <div v-if="error || sessionEnded" class="mx-auto max-w-3xl">
+              <UssdSessionError :error="error" />
+
+              <UssdSessionEnded v-if="sessionEnded" @reset="reset" />
+            </div>
           </div>
 
           <div
@@ -196,12 +202,6 @@ const reset = () => {
               />
             </div>
           </div>
-        </div>
-
-        <div v-if="error || sessionEnded" class="mx-auto max-w-3xl">
-          <UssdSessionError :error="error" />
-
-          <UssdSessionEnded v-if="sessionEnded" @reset="reset" />
         </div>
       </div>
 

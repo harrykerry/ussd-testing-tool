@@ -17,6 +17,19 @@ const sortedLogs = computed(() => {
   );
 });
 
+const getRequestText = (body: unknown) => {
+  if (
+    typeof body === "object" &&
+    body !== null &&
+    "text" in body &&
+    typeof body.text === "string"
+  ) {
+    return body.text;
+  }
+
+  return "";
+};
+
 const formatTime = (timestamp: string) =>
   new Date(timestamp).toLocaleTimeString([], {
     hour: "2-digit",
@@ -108,10 +121,10 @@ const durationTone = (duration?: number) => {
             <p
               class="min-w-0 flex-1 truncate text-sm font-medium text-brand-ink"
               :class="{
-                'italic text-brand-ink-subtle': !log.request.body?.text,
+                'italic text-brand-ink-subtle': !getRequestText(log.request.body),
               }"
             >
-              {{ log.request.body?.text || "Initial request" }}
+              {{ getRequestText(log.request.body) || "Initial request" }}
             </p>
 
             <span
@@ -127,7 +140,7 @@ const durationTone = (duration?: number) => {
             </span>
 
             <span v-else class="shrink-0" :class="STATUS_PILL_CLASSES.danger">
-              ERR
+              Error
             </span>
 
             <span
